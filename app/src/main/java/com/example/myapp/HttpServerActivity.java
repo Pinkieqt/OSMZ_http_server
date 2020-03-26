@@ -119,8 +119,6 @@ public class HttpServerActivity extends Activity implements OnClickListener{
 
 	@Override
 	public void onClick(View v) {
-		// TODO Auto-generated method stub
-
 		threadCount = Integer.parseInt(editText.getText().toString());
 
 		//start button
