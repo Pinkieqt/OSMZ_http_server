@@ -1,6 +1,7 @@
 package com.example.myapp;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Bundle;
@@ -42,6 +43,7 @@ public class HttpServerActivity extends Activity implements OnClickListener{
 	private int threadCount;
 	EditText editText;
 
+	FrameLayout preview;
 	private Camera mCamera;
 	private CameraPreview mPreview;
 	private CameraCallback mCallback;
@@ -62,69 +64,47 @@ public class HttpServerActivity extends Activity implements OnClickListener{
 		}
 	};
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+	private void onStartAndResume(){
+		setContentView(R.layout.activity_http_server);
+		verifyStoragePermissions(this);
 
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_http_server);
-        verifyStoragePermissions(this);
+		Button btn1 = (Button)findViewById(R.id.button1);
+		Button btn2 = (Button)findViewById(R.id.button2);
+		Button shutterBtn = (Button)findViewById(R.id.capturebtn);
+		Button serviceStartBtn = (Button)findViewById(R.id.serviceStartBtn);
+		editText = (EditText)findViewById((R.id.editText));
 
-        Button btn1 = (Button)findViewById(R.id.button1);
-        Button btn2 = (Button)findViewById(R.id.button2);
-        Button shutterBtn = (Button)findViewById(R.id.capturebtn);
-        editText = (EditText)findViewById((R.id.editText));
-
-        btn1.setOnClickListener(this);
-        btn2.setOnClickListener(this);
-        shutterBtn.setOnClickListener(this);
-
-		TextView textView = findViewById(R.id.textView);
-		textView.append("dsadas\n" + "dsada\n" + "dsadas\n" + "dsada\n" + "dsadas\n" + "dsada\n" + "dsadas\n" + "dsada\n" + "dsadas\n" + "dsada\n" + "sdgdfg");
-
-
-		Button testbtn = (Button)findViewById(R.id.testbtn);
-		testbtn.setOnClickListener(new OnClickListener() {
-
-			public void onClick(View v) {
-				Log.d("gate", "clicked");
-				//Gateway gt = new Gateway();
-				//gt.runCommand("GET /cgi-bin/uptime HTTP/1.1");
-			}
-		});
-
-
-
+		btn1.setOnClickListener(this);
+		btn2.setOnClickListener(this);
+		shutterBtn.setOnClickListener(this);
+		serviceStartBtn.setOnClickListener(this);
 
 		// Create an instance of Camera
 		mCamera = getCameraInstance();
 
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new CameraPreview(this, mCamera);
-		FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+		preview = (FrameLayout) findViewById(R.id.camera_preview);
 		preview.addView(mPreview);
 	}
-
-	/** A safe way to get an instance of the Camera object. */
-	public static Camera getCameraInstance(){
-		Camera c = null;
-		try {
-			c = Camera.open(); // attempt to get a Camera instance
-		}
-		catch (Exception e){
-			// Camera is not available (in use or does not exist)
-		}
-		return c; // returns null if camera is unavailable
-	}
-
-
 	@Override
 	public void onClick(View v) {
 		threadCount = Integer.parseInt(editText.getText().toString());
 
-		//start button
+		//start button (normal)
 		if (v.getId() == R.id.button1) {
 			s = new SocketServer(handler, threadCount, mCamera, mPreview);
 			s.start();
+		}
+		//start button (service)
+		if (v.getId() == R.id.serviceStartBtn) {
+			// TODO - aktivita vytvoří background službu po stisku tohoto tlačítka - jiný thread než hlavní UI
+			Log.d("Service", "Button clicked");
+			Intent intent = new Intent(this, ServerService.class);
+			startService(intent);
+
+
+
 		}
 		//stop button
 		if (v.getId() == R.id.button2) {
@@ -141,6 +121,49 @@ public class HttpServerActivity extends Activity implements OnClickListener{
 			mCamera.takePicture(null, null, mCallback.mPicture);
 		}
 	}
+
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+
+		super.onCreate(savedInstanceState);
+		onStartAndResume();
+	}
+
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		if (mCamera != null) {
+			mCamera.setPreviewCallback(null);
+			mPreview.getHolder().removeCallback(mPreview);
+			mCamera.release();
+			mCamera = null;
+		}
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		onStartAndResume();
+	}
+
+	/** A safe way to get an instance of the Camera object. */
+	public static Camera getCameraInstance(){
+		Camera c = null;
+		try {
+			c = Camera.open(); // attempt to get a Camera instance
+		}
+		catch (Exception e){
+			// Camera is not available (in use or does not exist)
+		}
+		return c; // returns null if camera is unavailable
+	}
+
+
+
+
+
 
 	//Nefungovalo zapisování na kartu - díky tomuto se Android zeptá na permission a funguje
 	public static void verifyStoragePermissions(Activity activity) {

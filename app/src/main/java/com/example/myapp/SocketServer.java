@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.Semaphore;
@@ -25,19 +26,22 @@ import android.util.Log;
 
 public class SocketServer extends Thread {
 	
-	ServerSocket serverSocket;
-	Semaphore semaphore;
-	Camera mCamera;
-	CameraPreview mPreview;
-	Handler handler;
-	public final int port = 12345;
+	private ServerSocket serverSocket;
+	private final int port = 12345;
+	private Semaphore semaphore;
+	private Handler handler;
 	private int threadCount;
-	boolean bRunning;
+	private boolean bRunning;
+
+	//Camera
+	private Camera mCamera;
+	private CameraPreview mPreview;
 
 	
 	public void close() {
 		try {
 			serverSocket.close();
+			mCamera.setPreviewCallback(null);
 		} catch (IOException e) {
 			Log.d("SERVER", "Error, probably interrupted in accept(), see log");
 			e.printStackTrace();

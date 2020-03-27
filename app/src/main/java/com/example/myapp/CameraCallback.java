@@ -17,19 +17,15 @@ public class CameraCallback {
     public File pictureFile;
     public byte[] pictureData;
 
-    public CameraCallback(){
-
-    }
-
-
+    public CameraCallback(){}
 
     public Camera.PictureCallback mPicture = new Camera.PictureCallback() {
 
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
-            Log.d("Camera", "Snímek zachycen.");
+            Log.d("Camera", "Image captured.");
             pictureData = data;
-            pictureFile = getOutputMediaFile(1);
+            pictureFile = getOutputMediaFile();
             if (pictureFile == null){
                 Log.d("Camera", "Error creating media file, check storage permissions");
                 return;
@@ -52,34 +48,20 @@ public class CameraCallback {
     };
 
 
-    /** Create a File for saving an image or video */
-    private static File getOutputMediaFile(int type){
-        // To be safe, you should check that the SDCard is mounted
-        // using Environment.getExternalStorageState() before doing this.
+    private static File getOutputMediaFile(){
 
         File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), "ACameraApp");
-        //File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-        //		Environment.DIRECTORY_PICTURES), "MyCameraApp");
+        //File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyCameraApp");
 
-        // This location works best if you want the created images to be shared
-        // between applications and persist after your app has been uninstalled.
-
-        // Create the storage directory if it does not exist
         if (! mediaStorageDir.exists()){
             if (! mediaStorageDir.mkdirs()){
-                Log.d("AMyCameraApp", "failed to create directory");
+                Log.d("AMyCameraApp", "failed to create directory, check permissions");
                 return null;
             }
         }
 
-        // Create a media file name
         File mediaFile;
-        if (type == 1){
-            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "IMG.jpg");
-        } else {
-            return null;
-        }
+        mediaFile = new File(mediaStorageDir.getPath() + File.separator + "IMG.jpg");
 
         return mediaFile;
     }
