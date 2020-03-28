@@ -4,58 +4,54 @@ import android.content.Intent;
 import android.hardware.Camera;
 import android.os.Environment;
 import android.util.Log;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import static androidx.core.content.ContextCompat.startActivity;
+public class CameraCallback implements Camera.PictureCallback {
 
-public class CameraCallback {
+    private File pictureFile;
+    private byte[] takenPictureData;
 
-    public File pictureFile;
-    public byte[] pictureData;
+    @Override
+    public void onPictureTaken(byte[] data, Camera camera) {
 
-    public CameraCallback(){}
+        Log.d("Camera", "Image captured.");
+        if (data == null)
+            return;
 
-    public Camera.PictureCallback mPicture = new Camera.PictureCallback() {
+        takenPictureData = data;
+        pictureFile = getOutputMediaFile();
 
-        @Override
-        public void onPictureTaken(byte[] data, Camera camera) {
-            Log.d("Camera", "Image captured.");
-            pictureData = data;
-            pictureFile = getOutputMediaFile();
-            if (pictureFile == null){
-                Log.d("Camera", "Error creating media file, check storage permissions");
-                return;
-            }
-
-            try {
-                FileOutputStream fos = new FileOutputStream(pictureFile);
-                fos.write(data);
-                fos.close();
-            } catch (FileNotFoundException e) {
-                Log.d("Camera", "File not found: " + e.getMessage());
-            } catch (IOException e) {
-                Log.d("Camera", "Error accessing file: " + e.getMessage());
-            }
-            finally {
-                //restart kamery
-                camera.startPreview();
-            }
+        //Zápis vyfoceného snímku na sd kartu
+        if (pictureFile == null){
+            Log.d("Camera", "Error creating media file, check storage permissions");
+            return;
         }
-    };
 
+        try {
+            FileOutputStream fos = new FileOutputStream(pictureFile);
+            fos.write(data);
+            fos.close();
+        } catch (FileNotFoundException e) {
+            Log.d("Camera", "File not found: " + e.getMessage());
+        } catch (IOException e) {
+            Log.d("Camera", "Error accessing file: " + e.getMessage());
+        }
+        finally {
+            //restart previewu
+            camera.startPreview();
+        }
+
+    }
 
     private static File getOutputMediaFile(){
-
         File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), "ACameraApp");
-        //File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "MyCameraApp");
 
         if (! mediaStorageDir.exists()){
             if (! mediaStorageDir.mkdirs()){
-                Log.d("AMyCameraApp", "failed to create directory, check permissions");
+                Log.d("AMyCameraApp", "Failed to create directory, check permissions");
                 return null;
             }
         }
@@ -65,5 +61,14 @@ public class CameraCallback {
 
         return mediaFile;
     }
+
+    public byte[] getTakenPictureData() {
+        return takenPictureData;
+    }
+
+    public File getPictureFile() {
+        return pictureFile;
+    }
+
 
 }

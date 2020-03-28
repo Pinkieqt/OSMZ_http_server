@@ -1,60 +1,31 @@
 package com.example.myapp;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.Semaphore;
-
-import android.content.Context;
 import android.hardware.Camera;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
+
+import static com.example.myapp.HttpServerActivity.mCamera;
 
 
 public class SocketServer extends Thread {
 	
 	private ServerSocket serverSocket;
 	private final int port = 12345;
+
 	private Semaphore semaphore;
-	private Handler handler;
 	private int threadCount;
 	private boolean bRunning;
 
 	//Camera
-	private Camera mCamera;
-	private CameraPreview mPreview;
+	private CameraCallback mCallback;
 
-	
-	public void close() {
-		try {
-			serverSocket.close();
-			mCamera.setPreviewCallback(null);
-		} catch (IOException e) {
-			Log.d("SERVER", "Error, probably interrupted in accept(), see log");
-			e.printStackTrace();
-		}
-		bRunning = false;
-	}
-
-	SocketServer (Handler hand, int threadCount, Camera mCam, CameraPreview mPrev){
-		this.handler = hand;
-		this.mCamera = mCam;
-		this.mPreview = mPrev;
+	SocketServer (int threadCount){
 		this.threadCount = threadCount;
-		this.semaphore = new Semaphore(50);
+		this.mCallback = new CameraCallback();
+		this.semaphore = new Semaphore(threadCount);
 	}
 
 	public void run() {
@@ -69,7 +40,8 @@ public class SocketServer extends Thread {
                 Log.d("SERVER", "Socket Accepted");
 
                 semaphore.acquire();
-				ClientThread client = new ClientThread(s, handler, semaphore, mCamera, mPreview);
+
+				ClientThread client = new ClientThread(s, semaphore);
 				client.start();
             }
         } 
@@ -88,11 +60,15 @@ public class SocketServer extends Thread {
         }
     }
 
-	private void sendMessage(String stringMessage) {
-		final Message message = Message.obtain();
-		final Bundle b = new Bundle();
-		b.putString("request", stringMessage);
-		message.setData(b);
-		handler.sendMessage(message);
+	public void close() {
+		try {
+			serverSocket.close();
+			mCamera.setPreviewCallback(null);
+		} catch (IOException e) {
+			Log.d("SERVER", "Error, probably interrupted in accept(), see log");
+			e.printStackTrace();
+		}
+		bRunning = false;
 	}
+
 }

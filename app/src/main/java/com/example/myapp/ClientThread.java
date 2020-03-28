@@ -25,11 +25,11 @@ import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.Semaphore;
 
+import static com.example.myapp.HttpServerActivity.mCamera;
+import static com.example.myapp.HttpServerActivity.mPreview;
+
 public class ClientThread extends Thread {
 
-    Handler handler;
-    Camera mCamera;
-    CameraPreview mPreview;
     Semaphore semaphore;
     ServerSocket serverSocket;
     Socket s;
@@ -37,26 +37,12 @@ public class ClientThread extends Thread {
     CameraCallback cameraCallback;
     Gateway gateway;
 
-    public ClientThread(Socket x, Handler hand, Semaphore semaphore, Camera mCam, CameraPreview mPrev){
-        this.handler = hand;
+    public ClientThread(Socket x, Semaphore semaphore){
         this.semaphore = semaphore;
-        this.mCamera = mCam;
-        this.mPreview = mPrev;
         this.s = x;
 
         //mPreview = new CameraPreview(context, mCamera);
 
-    }
-
-    public void close() {
-        try {
-            serverSocket.close();
-
-        } catch (IOException e) {
-            Log.d("ClientThread", "Error, probably interrupted in accept(), see log");
-            e.printStackTrace();
-        }
-        bRunning = false;
     }
 
     public void run() {
@@ -180,13 +166,13 @@ public class ClientThread extends Thread {
                 {
                     sendMessage(tmp);
                     cameraCallback = new CameraCallback();
-                    mCamera.takePicture(null, null, cameraCallback.mPicture);
+                    mCamera.takePicture(null, null, cameraCallback);
 
-                    while(cameraCallback.pictureData == null)
+                    while(cameraCallback.getTakenPictureData() == null)
                     {
                     }
 
-                    byte[] data = cameraCallback.pictureData;
+                    byte[] data = cameraCallback.getTakenPictureData();
 
 
                     //Pokud file existuje -> zobrazí s daným mimetypem
@@ -201,40 +187,6 @@ public class ClientThread extends Thread {
 
                     }
 
-                }
-
-                //camera stream - old, pomocí OnPictureTaken a CameraCallbacku - nelze dosáhnout víc jak 1 fps..
-                if(tmp.contains("GET /streamold"))
-                {
-                    sendMessage(tmp);
-
-                    out.write("HTTP/1.1 200 Ok\n" +
-                            "Content-Type: multipart/x-mixed-replace; boundary=\"OSMZ_boundary\"" +"\n" +
-                            //"Content-length: " + data.length + "\n" +
-                            "\n");
-                    out.flush();
-
-                    int x = 1;
-                    while( x < 8 ){
-                        cameraCallback = new CameraCallback();
-                        mCamera.takePicture(null, null, cameraCallback.mPicture);
-
-                        while(cameraCallback.pictureData == null)
-                        {
-                        }
-
-                        byte[] data = cameraCallback.pictureData;
-
-                        out.write("--OSMZ_boundary\n" +
-                                "Content-Type: image/jpeg" + "\n" +
-                                "Content-length: " + data.length + "\n" +
-                                "\n");
-                        out.flush();
-
-                        o.write(data);
-
-                        x++;
-                    }
                 }
 
                 //camera stream - pomocí camera preview
@@ -347,11 +299,7 @@ public class ClientThread extends Thread {
         return substring;
     }
 
-    private void sendMessage(String stringMessage) {
-        final Message message = Message.obtain();
-        final Bundle b = new Bundle();
-        b.putString("request", stringMessage);
-        message.setData(b);
-        handler.sendMessage(message);
+    private static void sendMessage(String stringMessage) {
+        HttpServerActivity.sendMessageToUI(stringMessage);
     }
 }

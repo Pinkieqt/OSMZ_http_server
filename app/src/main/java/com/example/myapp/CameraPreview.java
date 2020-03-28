@@ -11,14 +11,15 @@ import android.view.SurfaceView;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import static com.example.myapp.HttpServerActivity.mCamera;
+import static com.example.myapp.HttpServerActivity.mPreview;
+
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     private SurfaceHolder mHolder;
-    private Camera mCamera;
     public byte[] previewData;
 
-    public CameraPreview(Context context, Camera camera) {
+    public CameraPreview(Context context) {
         super(context);
-        mCamera = camera;
         mHolder = getHolder();
         mHolder.addCallback(this);
         mCamera.setDisplayOrientation(90);
@@ -36,8 +37,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     //Zníčení surface a uvolnění prostředků kamery
     public void surfaceDestroyed(SurfaceHolder holder) {
-        mCamera.release();
-        mCamera = null;
+        //mCamera.release();
     }
 
 
@@ -51,9 +51,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         } catch (Exception e){
             // ignore: tried to stop a non-existent preview
         }
-
-        // set preview size and make any resize, rotate or
-        // reformatting changes here
 
         // start preview with new settings
         try {
