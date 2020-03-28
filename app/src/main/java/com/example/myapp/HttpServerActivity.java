@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -31,8 +30,6 @@ public class HttpServerActivity extends Activity implements OnClickListener{
 	};
 
 
-	private SocketServer socketServer = null;
-	private boolean isRunning = false;
 	private int threadCount;
 
 	private EditText editText;

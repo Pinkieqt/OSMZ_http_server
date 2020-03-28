@@ -16,14 +16,12 @@ public class SocketServer extends Thread {
 	private final int port = 12345;
 
 	private Semaphore semaphore;
-	private int threadCount;
 	private boolean bRunning;
 
 	//Camera
 	private CameraCallback mCallback;
 
 	SocketServer (int threadCount){
-		this.threadCount = threadCount;
 		this.mCallback = new CameraCallback();
 		this.semaphore = new Semaphore(threadCount);
 	}

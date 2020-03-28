@@ -24,49 +24,47 @@ public class ClientThread extends Thread {
     Semaphore semaphore;
     ServerSocket serverSocket;
     Socket s;
-    boolean bRunning;
     CameraCallback cameraCallback;
     Gateway gateway;
 
     public ClientThread(Socket socket, Semaphore semaphore){
-        this.semaphore = semaphore;
         this.s = socket;
+        this.semaphore = semaphore;
     }
 
     public void run() {
         try {
             Log.d("ClientThread", "Socket Accepted");
 
-            OutputStream o = s.getOutputStream();
-            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(o));
+            OutputStream outputStream = s.getOutputStream();
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outputStream));
             BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
 
-            String tmp = in.readLine(); //to co příjmul
+            String line = in.readLine(); //to co příjmul
 
             String locPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-            File [] arrayfile;
+            File [] nestedFiles;
 
-            while(!tmp.isEmpty())
+            while(!line.isEmpty())
             {
-                Log.d("-",tmp);
+                Log.d("-",line);
 
-                String pathSubString = "nothing here";
-                String substring = "nothing here";
-                String fileType = "nothing here";
-                String mimetype = "nothing here";
+                String pathSubString;
+                String substring;
+                String fileType;
+                String mimetype;
 
-                if(tmp.contains("GET /") && !tmp.contains("GET /snapshot") && !tmp.contains("GET /stream") && !tmp.contains("GET /streamold") && !tmp.contains("GET /cgi-bin"))
+                if(line.contains("GET /") && !line.contains("GET /snapshot") && !line.contains("GET /stream") && !line.contains("GET /streamold") && !line.contains("GET /cgi-bin"))
                 {
-                    sendMessage(tmp);
+                    sendMessage(line);
 
                     //Get substring
-                    substring = getSubstring(tmp);
-                    pathSubString = getPathSubstring(tmp);
+                    substring = getSubstring(line);
+                    pathSubString = getPathSubstring(line);
 
                     //Get mimetype
                     fileType = MimeTypeMap.getFileExtensionFromUrl(substring);
                     mimetype = getMimeType(fileType);
-
 
                     File file = new File(locPath + "/" + pathSubString);
 
@@ -84,75 +82,69 @@ public class ClientThread extends Thread {
                         int len;
                         while((len = fileInputStream.read(buffer)) != -1)
                         {
-                            o.write(buffer, 0, len);
+                            outputStream.write(buffer, 0, len);
                         }
                     }
 
                     //Pokud je daný soubor složka -> pokračovat dále a listovat složku
                     else if(file.exists() && file.isDirectory())
                     {
-                        File root = Environment.getExternalStorageDirectory();
-                        String fullPath = root.getAbsolutePath() + "/" + substring;
+                        nestedFiles = file.listFiles();
 
-                        File otherFile = new File(fullPath);
-                        arrayfile = otherFile.listFiles();
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("<html><body><h1>List of all files</h1>");
 
-
-                        Log.d("substring", pathSubString);
-                        Log.d("ASRAGS", pathSubString);
-
-                        String html = "<html><body><h1>List of files</h1>";
-                        if(arrayfile.length > 0)
+                        if(nestedFiles.length > 0)
                         {
-                            for (int i = 0; i < arrayfile.length; i++)
+                            for (int i = 0; i < nestedFiles.length; i++)
                             {
-                                html += "<a href='" + pathSubString + "/" + arrayfile[i].getName() + "'>" + arrayfile[i].getName() + "</a><br><br>";
-
+                                String fileName = nestedFiles[i].getName();
+                                sb.append(" <a href='");
+                                sb.append(pathSubString + "/");
+                                sb.append(nestedFiles[i].getName());
+                                sb.append("/'>");
+                                sb.append(fileName);
+                                sb.append("</a><br><br>");
                             }
                         }
-
                         out.write("HTTP/1.1 200 Ok\n" +
                                 "Content-Type: "+ mimetype +"\n" +
                                 "\n");
-                        out.write(html);
+                        out.write(sb.toString());
                         out.flush();
-
                     }
 
                     else
                     {
-                        Log.d("JSEM VENKU", "venku");
-                        File root = Environment.getExternalStorageDirectory();
+                        nestedFiles = file.listFiles();
 
-                        File otherFile = new File(root.getAbsolutePath() + "/");
-                        arrayfile = otherFile.listFiles();
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("<html><body><h1>List of all files</h1>");
 
-
-                        Log.d("substring", pathSubString);
-                        Log.d("ASRAGS", pathSubString);
-
-                        String html = "<html><body><h1>List of files</h1>";
-                        if(arrayfile.length > 0)
+                        if(nestedFiles.length > 0)
                         {
-                            for (int i = 0; i < arrayfile.length; i++)
+                            for (int i = 0; i < nestedFiles.length; i++)
                             {
-                                html += "<a href='" + "/" + arrayfile[i].getName() + "'>" + arrayfile[i].getName() + "</a><br><br>";
-
+                                String fileName = nestedFiles[i].getName();
+                                sb.append(" <a href='");
+                                sb.append(nestedFiles[i].getName());
+                                sb.append("/'>");
+                                sb.append(fileName);
+                                sb.append("</a><br><br>");
                             }
                         }
-
                         out.write("HTTP/1.1 200 Ok\n" +
-                                "Content-Type: text/html\n" +
+                                "Content-Type: "+ mimetype +"\n" +
                                 "\n");
-                        out.write(html);
+                        out.write(sb.toString());
                         out.flush();
                     }
                 }
 
                 //camera snapshot
-                if(tmp.contains("GET /snapshot"))
+                else if(line.contains("GET /snapshot"))
                 {
-                    sendMessage(tmp);
+                    sendMessage(line);
                     cameraCallback = new CameraCallback();
                     mCamera.takePicture(null, null, cameraCallback);
 
@@ -171,16 +163,16 @@ public class ClientThread extends Thread {
                                 "\n");
                         out.flush();
 
-                        o.write(data);
+                        outputStream.write(data);
 
                     }
 
                 }
 
                 //camera stream - pomocí camera preview
-                if(tmp.contains("GET /stream"))
+                else if(line.contains("GET /stream"))
                 {
-                    sendMessage(tmp);
+                    sendMessage(line);
 
                     out.write("HTTP/1.1 200 Ok\n" +
                             "Content-Type: multipart/x-mixed-replace; boundary=\"OSMZ_boundary\"" +"\n" +
@@ -188,7 +180,7 @@ public class ClientThread extends Thread {
                             "\n");
                     out.flush();
 
-                    while(tmp.contains("GET /stream")) {
+                    while(line.contains("GET /stream")) {
                         byte[] data = mPreview.previewData;
 
                         out.write("--OSMZ_boundary\n" +
@@ -197,12 +189,12 @@ public class ClientThread extends Thread {
                                 "\n");
                         out.flush();
 
-                        o.write(data);
+                        outputStream.write(data);
                     }
                 }
 
-                if(tmp.contains("GET /cgi-bin")){
-                    sendMessage(tmp);
+                else if(line.contains("GET /cgi-bin")){
+                    sendMessage(line);
 
                     out.write("HTTP/1.1 200 Ok\n" +
                             "Content-Type: text/html" +"\n" +
@@ -211,11 +203,11 @@ public class ClientThread extends Thread {
                     out.flush();
 
                     gateway = new Gateway();
-                    List<String> result = gateway.runCommand(tmp);
+                    List<String> result = gateway.runCommand(line);
 
                     if(!result.isEmpty()){
-                        for(String line : result) {
-                            out.write("<p>" + line + "</p>");
+                        for(String lineInResult : result) {
+                            out.write("<p>" + lineInResult + "</p>");
                             out.flush();
                         }
                     }
@@ -226,12 +218,12 @@ public class ClientThread extends Thread {
                 }
 
                 //přečtení dalšího řádku
-                tmp = in.readLine();
+                line = in.readLine();
             }
 
 
 
-            o.close();
+            outputStream.close();
             s.close();
             Log.d("ClientThread", "Socket Closed");
 

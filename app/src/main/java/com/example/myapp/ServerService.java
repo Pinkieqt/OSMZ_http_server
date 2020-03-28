@@ -30,7 +30,6 @@ public class ServerService extends Service {
         Log.d("Service", "Service started");
     }
 
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {

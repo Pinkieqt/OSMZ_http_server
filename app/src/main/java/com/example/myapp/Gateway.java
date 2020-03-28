@@ -85,31 +85,4 @@ public class Gateway {
 
         return tmpStringList;
     }
-
-    /*
-
-    OLD
-
-     */
-    //String parser pro process builder
-    public List<String> parseString(String request){
-        //Vzor - GET /cgi-bin/command/command/command HTTP/1.1
-        List<String> tmpStringList = new ArrayList<String>();
-        String substring;
-
-        substring = request.replace("GET /cgi-bin/", "");
-        substring = substring.substring(0, substring.lastIndexOf(" "));
-
-        String[] stringArray = substring.split("/");
-
-        tmpStringList.add("sh");
-        tmpStringList.add("-c");
-
-        for (String tmp : stringArray)
-            tmpStringList.add(tmp);
-
-        return tmpStringList;
-    }
-
-
 }
