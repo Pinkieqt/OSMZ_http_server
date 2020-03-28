@@ -1,6 +1,5 @@
 package com.example.myapp;
 
-import android.content.Intent;
 import android.hardware.Camera;
 import android.os.Environment;
 import android.util.Log;
@@ -40,7 +39,7 @@ public class CameraCallback implements Camera.PictureCallback {
             Log.d("Camera", "Error accessing file: " + e.getMessage());
         }
         finally {
-            //restart previewu
+            //preview restart
             camera.startPreview();
         }
 

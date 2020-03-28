@@ -5,14 +5,12 @@ import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.util.Log;
-import android.util.Size;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import static com.example.myapp.HttpServerActivity.mCamera;
-import static com.example.myapp.HttpServerActivity.mPreview;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
     private SurfaceHolder mHolder;
@@ -35,11 +33,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-    //Zníčení surface a uvolnění prostředků kamery
     public void surfaceDestroyed(SurfaceHolder holder) {
         //mCamera.release();
     }
-
 
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
         if (mHolder.getSurface() == null){

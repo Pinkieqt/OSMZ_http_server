@@ -1,25 +1,19 @@
 package com.example.myapp;
 
-import android.app.IntentService;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 import androidx.annotation.Nullable;
 
 
 public class ServerService extends Service {
     public SocketServer socketServer = null;
     public Intent intent = null;
-    public static Runnable runnable = null;
 
     @Override
     public void onCreate() {
-        Log.d("Service", "Service Created");
+        Log.d("Service", "Service created");
     }
 
     @Override
@@ -31,10 +25,9 @@ public class ServerService extends Service {
     @Override
     public void onStart(Intent intent, int startid) {
         this.intent = intent;
-
-        socketServer = new SocketServer(25);
+        socketServer = new SocketServer(this.intent.getIntExtra("threadCount", 25));
         socketServer.start();
-        Log.d("Service", "Service Started");
+        Log.d("Service", "Service started");
     }
 
 

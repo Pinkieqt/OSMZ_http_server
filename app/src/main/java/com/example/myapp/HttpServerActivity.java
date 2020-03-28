@@ -46,8 +46,26 @@ public class HttpServerActivity extends Activity implements OnClickListener{
 	private Intent serverServiceIntent;
 
 
-	private void onStartAndResume(){
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_http_server);
+		verifyStoragePermissions(this);
 
+		Button serviceStartBtn = (Button)findViewById(R.id.serviceStartBtn);
+		Button btn2 = (Button)findViewById(R.id.button2);
+		Button shutterBtn = (Button)findViewById(R.id.capturebtn);
+
+		editText = (EditText)findViewById((R.id.editText));
+		textView = findViewById(R.id.textView);
+
+		btn2.setOnClickListener(this);
+		shutterBtn.setOnClickListener(this);
+		serviceStartBtn.setOnClickListener(this);
+
+		mPreview = new CameraPreview(this);
+		previewLayout = (FrameLayout) findViewById(R.id.camera_preview);
+		previewLayout.addView(mPreview);
 	}
 
 
@@ -55,13 +73,7 @@ public class HttpServerActivity extends Activity implements OnClickListener{
 	public void onClick(View v) {
 		threadCount = Integer.parseInt(editText.getText().toString());
 
-		//start button (normal)
-		if (v.getId() == R.id.button1) {
-			//socketServer = new SocketServer(threadCount, mPreview);
-			//isRunning = true;
-			//socketServer.start();
-		}
-		//start button (service)
+		//start button
 		if (v.getId() == R.id.serviceStartBtn) {
 			serverServiceIntent = new Intent(this, ServerService.class);
 			serverServiceIntent.putExtra("threadCount", threadCount);
@@ -77,33 +89,6 @@ public class HttpServerActivity extends Activity implements OnClickListener{
 			mCamera.takePicture(null, null, mCallback);
 		}
 	}
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_http_server);
-		verifyStoragePermissions(this);
-
-		Button btn1 = (Button)findViewById(R.id.button1);
-		Button btn2 = (Button)findViewById(R.id.button2);
-		Button shutterBtn = (Button)findViewById(R.id.capturebtn);
-		Button serviceStartBtn = (Button)findViewById(R.id.serviceStartBtn);
-
-		editText = (EditText)findViewById((R.id.editText));
-		textView = findViewById(R.id.textView);
-
-
-		btn1.setOnClickListener(this);
-		btn2.setOnClickListener(this);
-		shutterBtn.setOnClickListener(this);
-		serviceStartBtn.setOnClickListener(this);
-
-		// Create our Preview view and set it as the content of our activity.
-		mPreview = new CameraPreview(this);
-		previewLayout = (FrameLayout) findViewById(R.id.camera_preview);
-		previewLayout.addView(mPreview);
-	}
-
 
 
 	public static void sendMessageToUI(final String message){

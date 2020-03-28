@@ -1,20 +1,12 @@
 package com.example.myapp;
 
-import android.content.Context;
-import android.hardware.Camera;
-import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -22,7 +14,6 @@ import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
-import java.util.Timer;
 import java.util.concurrent.Semaphore;
 
 import static com.example.myapp.HttpServerActivity.mCamera;
@@ -37,12 +28,9 @@ public class ClientThread extends Thread {
     CameraCallback cameraCallback;
     Gateway gateway;
 
-    public ClientThread(Socket x, Semaphore semaphore){
+    public ClientThread(Socket socket, Semaphore semaphore){
         this.semaphore = semaphore;
-        this.s = x;
-
-        //mPreview = new CameraPreview(context, mCamera);
-
+        this.s = socket;
     }
 
     public void run() {
