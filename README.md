@@ -1,17 +1,17 @@
 # OSMZ_http_server
 OSMZ Android HTTP server project
 
-Student: KUC0277
+### Student: KUC0277
 
-## Kamera
+#### Kamera
 - Níže jsou uvedeny funkce kamery.
-## Snapshot
+#### Snapshot
 - /snapshot
 
-## Stream
+#### Stream
 - /stream
 
-## cgi-bin
+#### cgi-bin
 - /cgi-bin/Command/Arguments
 - Oddělovač mezi příkazem a argumenty je klasické lomeno. 
 Tedy například: /cgi-bin/ls/sdcard/DCIM/Camera
