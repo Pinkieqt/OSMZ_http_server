@@ -3,8 +3,6 @@ OSMZ Android HTTP server project
 
 ### Student: KUC0277
 
-#### Kamera
-- Níže jsou uvedeny funkce kamery.
 #### Snapshot
 - /snapshot
 
