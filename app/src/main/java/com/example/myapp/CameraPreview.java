@@ -55,7 +55,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 @Override
                 public void onPreviewFrame(byte [] data, Camera camera){
                     //Image v Previewu je ve formátu Yav
-                    //potřeba převést do JPEG byte arraye
                     previewData = convertYuvToBytearray(data, camera);
                 }
             });

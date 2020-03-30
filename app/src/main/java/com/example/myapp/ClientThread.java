@@ -40,17 +40,17 @@ public class ClientThread extends Thread {
             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outputStream));
             BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
 
-            String line = in.readLine(); //to co příjmul
+            //Příjmul ze socketu
+            String line = in.readLine();
 
-            String locPath = Environment.getExternalStorageDirectory().getAbsolutePath();
             File [] nestedFiles;
 
             while(!line.isEmpty())
             {
                 Log.d("-",line);
 
-                String pathSubString;
                 String substring;
+                String tmpPath;
                 String fileType;
                 String mimetype;
 
@@ -60,13 +60,17 @@ public class ClientThread extends Thread {
 
                     //Get substring
                     substring = getSubstring(line);
-                    pathSubString = getPathSubstring(line);
+
+                    if (!substring.isEmpty() && substring.contains("/"))
+                        tmpPath = substring.substring(substring.indexOf("/")).substring(1);
+                    else tmpPath = substring;
 
                     //Get mimetype
                     fileType = MimeTypeMap.getFileExtensionFromUrl(substring);
                     mimetype = getMimeType(fileType);
 
-                    File file = new File(locPath + "/" + pathSubString);
+                    String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + substring;
+                    File file = new File(filePath);
 
                     //Pokud file existuje -> zobrazí s daným mimetypem
                     if (file.exists() && file.isFile()) {
@@ -86,60 +90,22 @@ public class ClientThread extends Thread {
                         }
                     }
 
-                    //Pokud je daný soubor složka -> pokračovat dále a listovat složku
+                    //Pokud se jedná o složku -> vylistovat soubory z dané složky
                     else if(file.exists() && file.isDirectory())
                     {
                         nestedFiles = file.listFiles();
-
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("<html><body><h1>List of all files</h1>");
-
-                        if(nestedFiles.length > 0)
-                        {
-                            for (int i = 0; i < nestedFiles.length; i++)
-                            {
-                                String fileName = nestedFiles[i].getName();
-                                sb.append(" <a href='");
-                                sb.append(pathSubString + "/");
-                                sb.append(nestedFiles[i].getName());
-                                sb.append("/'>");
-                                sb.append(fileName);
-                                sb.append("</a><br><br>");
-                            }
-                        }
-                        out.write("HTTP/1.1 200 Ok\n" +
-                                "Content-Type: "+ mimetype +"\n" +
-                                "\n");
-                        out.write(sb.toString());
-                        out.flush();
+                        listFolderContents(nestedFiles, tmpPath, out, mimetype);
                     }
 
+                    //Ani soubor, ani složka -> vylistovat root SD karty
                     else
                     {
-                        nestedFiles = file.listFiles();
-
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("<html><body><h1>List of all files</h1>");
-
-                        if(nestedFiles.length > 0)
-                        {
-                            for (int i = 0; i < nestedFiles.length; i++)
-                            {
-                                String fileName = nestedFiles[i].getName();
-                                sb.append(" <a href='");
-                                sb.append(nestedFiles[i].getName());
-                                sb.append("/'>");
-                                sb.append(fileName);
-                                sb.append("</a><br><br>");
-                            }
-                        }
-                        out.write("HTTP/1.1 200 Ok\n" +
-                                "Content-Type: "+ mimetype +"\n" +
-                                "\n");
-                        out.write(sb.toString());
-                        out.flush();
+                        File root = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/");
+                        nestedFiles = root.listFiles();
+                        listFolderContents(nestedFiles, tmpPath, out, mimetype);
                     }
                 }
+
 
                 //camera snapshot
                 else if(line.contains("GET /snapshot"))
@@ -148,12 +114,9 @@ public class ClientThread extends Thread {
                     cameraCallback = new CameraCallback();
                     mCamera.takePicture(null, null, cameraCallback);
 
-                    while(cameraCallback.getTakenPictureData() == null)
-                    {
-                    }
+                    while(cameraCallback.getTakenPictureData() == null){}
 
                     byte[] data = cameraCallback.getTakenPictureData();
-
 
                     //Pokud file existuje -> zobrazí s daným mimetypem
                     if (data.length != 0) {
@@ -164,9 +127,7 @@ public class ClientThread extends Thread {
                         out.flush();
 
                         outputStream.write(data);
-
                     }
-
                 }
 
                 //camera stream - pomocí camera preview
@@ -182,17 +143,16 @@ public class ClientThread extends Thread {
 
                     while(line.contains("GET /stream")) {
                         byte[] data = mPreview.previewData;
-
                         out.write("--OSMZ_boundary\n" +
                                 "Content-Type: image/jpeg" + "\n" +
                                 "Content-length: " + data.length + "\n" +
                                 "\n");
                         out.flush();
-
                         outputStream.write(data);
                     }
                 }
 
+                //CGI - do HTML bez mezery!     ex: .../cgi-bin/ls/sdcard/DCIM/Camera -> ls = command, sdcard/DCIM/Camera = argument
                 else if(line.contains("GET /cgi-bin")){
                     sendMessage(line);
 
@@ -220,8 +180,6 @@ public class ClientThread extends Thread {
                 //přečtení dalšího řádku
                 line = in.readLine();
             }
-
-
 
             outputStream.close();
             s.close();
@@ -251,6 +209,30 @@ public class ClientThread extends Thread {
     *
     *
     */
+    private void listFolderContents(File[] nestedFiles, String tmpPath, BufferedWriter out, String mimetype) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><body><h1>List of all files</h1>");
+
+        if(nestedFiles.length > 0)
+        {
+            for (int i = 0; i < nestedFiles.length; i++)
+            {
+                String fileName = nestedFiles[i].getName();
+                sb.append(" <a href='");
+                sb.append(tmpPath + "/");
+                sb.append(nestedFiles[i].getName());
+                sb.append("'>");
+                sb.append(fileName);
+                sb.append("</a><br><br>");
+            }
+        }
+        out.write("HTTP/1.1 200 Ok\n" +
+                "Content-Type: "+ mimetype +"\n" +
+                "\n");
+        out.write(sb.toString());
+        out.flush();
+    }
+
     private String getMimeType(String fileType){
         String mimetype = "text/html";
         if (fileType != null) {
@@ -260,21 +242,11 @@ public class ClientThread extends Thread {
         return mimetype;
     }
 
-    private String getPathSubstring(String tmp){
+    private String getSubstring(String tmp){
         String substring;
 
         substring = tmp.replace("GET /", "");
         substring = substring.replace(" HTTP/1.1", "");
-
-        return substring;
-
-    }
-
-    private String getSubstring(String tmp){
-        String substring;
-        substring = tmp.substring(5);
-        substring = substring.substring(0, substring.lastIndexOf(" "));
-        substring = substring.split(" ")[0];
 
         return substring;
     }

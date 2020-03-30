@@ -50,7 +50,7 @@ public class CameraCallback implements Camera.PictureCallback {
 
         if (! mediaStorageDir.exists()){
             if (! mediaStorageDir.mkdirs()){
-                Log.d("AMyCameraApp", "Failed to create directory, check permissions");
+                Log.d("Camera", "Failed to create directory, check permissions");
                 return null;
             }
         }

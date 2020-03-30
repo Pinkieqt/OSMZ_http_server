@@ -97,7 +97,8 @@ public class HttpServerActivity extends Activity implements OnClickListener{
 				DateFormat df = new SimpleDateFormat("hh:mm:ss");
 				String date = df.format(Calendar.getInstance().getTime());
 
-				textView.setText(date + ": " + data + textView.getText());
+				if(textView != null)
+					textView.setText(date + ": " + data + textView.getText());
 			}
 		});
 	}

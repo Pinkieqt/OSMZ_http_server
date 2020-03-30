@@ -9,7 +9,6 @@ import androidx.annotation.Nullable;
 
 public class ServerService extends Service {
     public SocketServer socketServer = null;
-    public Intent intent = null;
 
     @Override
     public void onCreate() {
@@ -24,8 +23,11 @@ public class ServerService extends Service {
 
     @Override
     public void onStart(Intent intent, int startid) {
-        this.intent = intent;
-        socketServer = new SocketServer(this.intent.getIntExtra("threadCount", 25));
+        //Default value
+        int threadCount = 25;
+        if (intent != null)
+            threadCount = intent.getIntExtra("threadCount", 25);
+        socketServer = new SocketServer(threadCount);
         socketServer.start();
         Log.d("Service", "Service started");
     }
